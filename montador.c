@@ -3,6 +3,30 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+#define ADD 4
+#define CONST 5
+#define COPY 6
+#define DATA 7
+#define DIV 8
+#define ENDMACRO 9
+#define EQU 10
+#define IF 11
+#define INPUT 12
+#define JMP 13
+#define JMPN 14
+#define JMPP 15
+#define JMPZ 16
+#define LOAD 17
+#define MACRO 18
+#define MULT 19
+#define OUTPUT 20
+#define SECTION 21
+#define SPACE 22
+#define STOP 23
+#define STORE 24
+#define SUB 25
+#define TEXT 26
 #define ROTULO 27
 #define NUMERO 28
 /*
@@ -42,22 +66,26 @@ typedef struct listaToken //Cada elemento corresponde a uma linha
 typedef struct diretivaPre
 {
 	char nomeRotulo [20];
-	int operando;
+	char operando [10];
 	struct diretivaPre *prox;
 } DiretivaEQU;
 
+
+
 DiretivaEQU* diretivasPreprocessamento (DiretivaEQU *lista, Tokens *listaDeTokens, short int *flagDiretivas);
-DiretivaEQU* adicionaDiretivaPre (DiretivaEQU *lista, char *nome, short int *flag);
+DiretivaEQU* adicionaDiretivaPre (DiretivaEQU *lista, char *nome, char *operando, short int *flag);
 Tokens* scannerPreprocessamento (Tokens* lista, char* linhaLida, int quantia);
 Tokens* novaLinhaTokens (Tokens *lista, int linhaOriginal);
 short int procuraEQU (DiretivaEQU *lista, char *string);
 int preprocessamento (FILE *fp, char *arquivoSaida);
 Tokens* insereToken (Tokens *lista, char *string);
 int leituraDeLinhaPre (FILE *fp, char *linha);
+void printDiretivaEQU (DiretivaEQU* lista);
 void liberaEQU (DiretivaEQU *lista);
 void liberaTokens (Tokens *lista);
 void printTokens (Tokens *lista);
 DiretivaEQU* criaDiretivaEQU ();
+int isNumber (char *string);
 Tokens* criaTokens ();
 Token* criaToken ();
 
@@ -77,7 +105,6 @@ int main(int argc, char** argv)
 		printf("ERRO_4\nMemória insuficiente");
 		return 4;
 	}
-
 	strcpy (nomeArquivo, argv[1]);
 	strcat (nomeArquivo, ".asm");
 	printf ("_%s_\n", nomeArquivo);
@@ -137,23 +164,22 @@ Tokens* scannerPreprocessamento (Tokens* listaDeTokens, char* linhaLida, int qua
 {
 	int i, tamanho = strlen (linhaLida), contador = 0;
 	char palavra[21]; //(20 é o maior tamanho de rotulo possivel + ':')
-
 	//Separador de tokens
-	for (i = 0; i < tamanho; i++)
+	for (i = 0; i <= tamanho; i++)
 	{
-		if (linhaLida[i] == ' ')  //Fim do caracter
+		if (linhaLida[i] == ' ' || linhaLida[i] == '\0') //Fim do caracter
 		{
 			palavra[contador] = '\0'; //Finaliza token
-			listaDeTokens = insereToken (listaDeTokens, palavra); //Adiciona token
+			if (palavra[0] != '\0')
+				listaDeTokens = insereToken (listaDeTokens, palavra); //Adiciona token
 			contador = 0; //Prepara para novo token
 		}
 		else if (linhaLida[i] == ',') //Encontrou virgula
 		{
-		printf ("aqui\n Encontrou virgula");
 			short int aux = 0;
 			if (i > 0) //Não é o primeiro elemento
 			{
-				
+
 				if (linhaLida[i - 1] == ' ') //Antes da virgula tem espaço
 				{
 					printf ("virgula antes\n");
@@ -193,22 +219,34 @@ Tokens* scannerPreprocessamento (Tokens* listaDeTokens, char* linhaLida, int qua
 		{
 			palavra[contador] = linhaLida [i];
 			contador++;
+			/*
+			int cont;
+			printf ("Token: ");
+			for (cont = 0; cont < contador; cont++)
+				printf ("%c", palavra[cont]);
+			printf ("\n");
+			//*/
 		}
 	}
 	printTokens (listaDeTokens);
 	return listaDeTokens;
 }
 
-void printTokens (Tokens *lista){
+void printTokens (Tokens *lista)
+{
+	printf ("Impressao\n");
 	Tokens *temp;
 	Token *aux;
 	temp = lista;
-	while (temp != NULL){
+	while (temp != NULL)
+	{
 		aux = temp->token;
 		printf ("Linha: %d", temp->linhaOriginal);
-		while (aux != NULL){
+		while (aux != NULL)
+		{
 			printf ("\t%d: ", aux->tipo);
-			if (aux->string != NULL){
+			if (aux->string != NULL)
+			{
 				printf ("'%s'", aux->string);
 			}
 			aux = aux->prox;
@@ -244,18 +282,20 @@ int preprocessamento (FILE *fp, char *arquivoSaida)
 	linhaLida = (char *)calloc (100, sizeof (char)); //Cria uma string com tamanho de 100 para ler linha
 	while (qtdLinhasLidas != -1)
 	{
-		
-			
+
+
 		//Leitura de linha, ignorando comentario e espaços extras!
 		qtdLinhasLidas = leituraDeLinhaPre (fp, linhaLida);
-		
-		printf ("Quantidade de linhas lidas: %d\n", qtdLinhasLidas);
+
+		//printf ("Quantidade de linhas lidas: %d\n", qtdLinhasLidas);
 		//linhaLida = (char *)realloc (linhaLida, strlen (linhaLida) * sizeof (char)); //Diminui tamanho da string
-		if (listaDeTokensPre->linhaOriginal == -1){ //correção da primeira linha. melhorar aqui
+		if (listaDeTokensPre->linhaOriginal == -1)  //correção da primeira linha. melhorar aqui
+		{
+			//listaDeTokensPre = novaLinhaTokens(listaDeTokensPre, qtdLinhasLidas + listaDeTokensPre->linhaOriginal);
 			listaDeTokensPre->linhaOriginal = qtdLinhasLidas;
 		}
-		printf ("Quantidade de linhas no token: %d\n", listaDeTokensPre->linhaOriginal);
-
+		//printf ("Quantidade de linhas no token: %d\n", listaDeTokensPre->linhaOriginal);
+		printTokens(listaDeTokensPre);
 		//Execução das diretivas EQU e IF
 		if (qtdLinhasLidas != -1)
 		{
@@ -269,9 +309,8 @@ int preprocessamento (FILE *fp, char *arquivoSaida)
 				//Adiciona linha ao arquivo de saída
 				if (flagFalsoIF == 0) //Comando anterior NÂO era um if com condição falsa
 				{
-					
-					listaDeTokensPre = novaLinhaTokens(listaDeTokensPre, qtdLinhasLidas+listaDeTokensPre->linhaOriginal);
-					printf ("Nova lina original: %d\n", qtdLinhasLidas+listaDeTokensPre->linhaOriginal);
+					//printf ("Nova lina original: %d\n", qtdLinhasLidas+listaDeTokensPre->linhaOriginal);
+					printTokens(listaDeTokensPre);
 					fputs (linhaLida, saida);
 					fputc ('\n', saida);
 				}
@@ -289,6 +328,8 @@ int preprocessamento (FILE *fp, char *arquivoSaida)
 				break;
 			}
 		}
+		listaDeTokensPre = novaLinhaTokens(listaDeTokensPre, qtdLinhasLidas);
+
 	}
 	free (linhaLida);
 	fclose (saida);
@@ -296,45 +337,65 @@ int preprocessamento (FILE *fp, char *arquivoSaida)
 	return 0;
 }
 
+void printDiretivaEQU (DiretivaEQU* lista)
+{
+	DiretivaEQU* aux = lista;
+	while (aux != NULL)
+	{
+		printf ("Rotulo: %s\t", aux->nomeRotulo);
+		printf ("Operando: %s\n", aux->operando);
+		aux = aux->prox;
+	}
+}
+
 DiretivaEQU* diretivasPreprocessamento (DiretivaEQU *lista, Tokens *listaDeTokens, short int *flagDiretivas)
 {
+
 	short int contador = 0;
-	Token *temp;
-	temp = listaDeTokens->token;
+	Token *temp, *ant;
+	Tokens *aux = listaDeTokens;
+	while (aux->proximaLinha != NULL){
+		aux = aux->proximaLinha;
+	}
+	temp = aux->token;
+	ant = temp;
 	while (temp != NULL)
 	{
-		if (temp->tipo == 10) //EQU
+		if (temp->tipo == EQU) //EQU
 		{
-			if (contador != 1 || listaDeTokens->qtdToken != 3) //EQU não é o segundo token da linha
-				printf ("Erro 8 - Uso inválido da diretiva EQU, use ROTULO: EQU VALOR - Linha: %d\n", listaDeTokens->linhaOriginal);
-			else if (temp->tipo != ROTULO && temp->tipo > 2)//Token anterior não é rotulo, nem virgula
-				printf ("Erro 9 - Uso inválido de instrução - Linha: %d\n", listaDeTokens->linhaOriginal);
-			else if (temp->tipo <= 2)
-				printf ("Erro 10 - Virgula inesperada - Linha: %d\n", listaDeTokens->linhaOriginal);
+			printf ("Token analise diretiva: %s\n", temp->string);
+			if (contador != 1 || aux->qtdToken != 3) //EQU não é o segundo token da linha
+				printf ("Erro 8 - Uso invalido da diretiva EQU, use ROTULO: EQU VALOR - Linha: %d\n", aux->linhaOriginal);
+			else if (ant->tipo != ROTULO && ant->tipo > 2)//Token anterior não é rotulo, nem virgula
+				printf ("Erro 9 - Uso inválido de instrução - Linha: %d\n", aux->linhaOriginal);
+			else if (ant->tipo <= 2)
+				printf ("Erro 10 - Virgula inesperada - Linha: %d\n", aux->linhaOriginal);
 			else if(temp->prox->tipo != NUMERO)
-				printf ("Erro 8 - Uso inválido da diretiva EQU, use ROTULO: EQU VALOR - Linha: %d\n", listaDeTokens->linhaOriginal);
+				printf ("Erro 8 - Uso inválido da diretiva EQU, use ROTULO: EQU VALOR - Linha: %d\n", aux->linhaOriginal);
 			else  //não tem erro...ainda:
 			{
 				short int flag = 0;
-				lista = adicionaDiretivaPre (lista, temp->string, &flag);
+				lista = adicionaDiretivaPre (lista, ant->string, temp->prox->string, &flag);
 				if (flag)
-					printf ("Erro 12 - Rotulo Repetido - Linha: %d\n", listaDeTokens->linhaOriginal);
+					printf ("Erro 12 - Rotulo Repetido - Linha: %d\n", aux->linhaOriginal);
 			}
+			printf ("1Diretivas: \n");
+			printDiretivaEQU (lista);
 			*flagDiretivas = 2;
 			return lista;
 		}
-		else if (temp->tipo == 11) //IF
+		else if (temp->tipo == IF) //IF
 		{
-			if (contador != 0 || listaDeTokens->qtdToken != 2) //If não é o primeiro da linha ou tem mais de 3 elementos
-				printf ("Erro 11 - Uso inválido da diretiva IF, use IF OPERANDO - Linha: %d\n", listaDeTokens->linhaOriginal);
-			else if (temp->prox->tipo != ROTULO || temp->prox->tipo != NUMERO)
-				printf ("Erro 11 - Uso inválido da diretiva IF, use IF OPERANDO - Linha: %d\n", listaDeTokens->linhaOriginal);
+			if (contador != 0 || aux->qtdToken != 2) //If não é o primeiro da linha ou tem mais de 3 elementos
+				printf ("Erro 11 - Uso inválido da diretiva IF, use IF OPERANDO - Linha: %d\n", aux->linhaOriginal);
+			else if (temp->prox->tipo != ROTULO && temp->prox->tipo != NUMERO)
+				printf ("Erro 11 - Uso inválido da diretiva IF, use IF OPERANDO - Linha: %d\n", aux->linhaOriginal);
 			else
 			{
 				short int resultado = procuraEQU (lista, temp->prox->string);
 				if (resultado == -1)
 				{
-					printf ("Erro 7 - Rotulo Não Declarado - Linha: %d\n", listaDeTokens->linhaOriginal);
+					printf ("Erro 7 - Rotulo Não Declarado - Linha: %d\n", aux->linhaOriginal);
 					*flagDiretivas = 1;
 				}
 				else if (resultado == 0) //Operando diferente de 1
@@ -342,23 +403,32 @@ DiretivaEQU* diretivasPreprocessamento (DiretivaEQU *lista, Tokens *listaDeToken
 				else //Operando igual a 1
 					*flagDiretivas = 2;
 			}
+			printf ("2Diretivas: \n");
+			printDiretivaEQU (lista);
 			return lista;
 		}
 		else
 		{
 			contador++;
+			ant = temp;
 			temp = temp->prox;
 		}
 
 	}
+	printf ("3Diretivas: \n");
+	printDiretivaEQU (lista);
 	*flagDiretivas = 0;
 	return lista;
 }
 
-DiretivaEQU* adicionaDiretivaPre (DiretivaEQU *lista, char *nome, short int *flag)
+
+
+DiretivaEQU* adicionaDiretivaPre (DiretivaEQU *lista, char *nome, char *operando, short int *flag)
 {
 	DiretivaEQU *novo = (DiretivaEQU *)malloc(sizeof (DiretivaEQU));
 	strcpy (novo->nomeRotulo, nome);
+	novo->nomeRotulo[strlen (nome) - 1] = '\0';
+	strcpy (novo->operando, operando);
 	if (lista == NULL)
 	{
 		novo->prox = lista;
@@ -400,8 +470,9 @@ DiretivaEQU* adicionaDiretivaPre (DiretivaEQU *lista, char *nome, short int *fla
 			ant = temp;
 			temp = temp->prox;
 		}
+		ant->prox = novo;
 	}
-	ant->prox = novo;
+	
 	*flag = 0;
 	return lista;
 }
@@ -467,16 +538,29 @@ int tipoToken (char * string)
 		{
 			return i;
 		}
-		else if (strcmp (string, tabelaTokens[i]) > 0)
+		else if (strcmp (string, tabelaTokens[i]) < 0)
 		{
-			return 27;
+			if (isNumber (string))
+				return NUMERO;
+			return ROTULO;
 		}
 	}
-	return 27;
+	if (isNumber (string))
+		return NUMERO;
+	return ROTULO;
 }
 
 
-
+int isNumber (char *string)
+{
+	int tamanho = strlen (string), i;
+	for (i = 0; i < tamanho; i++)
+	{
+		if (string [i] < '0' || string [i] > '9')
+			return 0;
+	}
+	return 1;
+}
 
 /*
 Função de leitura de linha:
@@ -574,6 +658,7 @@ Tokens* novaLinhaTokens (Tokens * lista, int linhaOriginal)
 		{
 			temp = temp->proximaLinha;
 		}
+		novo->linhaOriginal += temp->linhaOriginal;
 		novo->proximaLinha = temp->proximaLinha;
 		temp->proximaLinha = novo;
 	}
@@ -589,7 +674,6 @@ Tokens* insereToken (Tokens * lista, char * string)
 {
 	Token *novo = (Token *)malloc(sizeof (Token));
 	novo->tipo = tipoToken (string);
-	lista->qtdToken++;
 	if (string != NULL) //Somente se for um rotulo
 	{
 		novo->string = (char *)malloc(strlen (string) * sizeof (char));
@@ -600,7 +684,13 @@ Tokens* insereToken (Tokens * lista, char * string)
 		novo->string = NULL;
 	}
 	Token *temp;
-	temp = lista->token;
+	Tokens *aux = lista;
+	while (aux->proximaLinha != NULL)
+	{
+		aux = aux->proximaLinha;
+	}
+	aux->qtdToken++;
+	temp = aux->token;
 	if (temp != NULL)
 	{
 		while (temp->prox != NULL)
@@ -612,8 +702,8 @@ Tokens* insereToken (Tokens * lista, char * string)
 	}
 	else
 	{
-		novo->prox = lista->token;
-		lista->token = novo;
+		novo->prox = aux->token;
+		aux->token = novo;
 	}
 	return lista;
 }
