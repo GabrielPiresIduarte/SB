@@ -179,10 +179,8 @@ Tokens* scannerPreprocessamento (Tokens* listaDeTokens, char* linhaLida, int qua
 			short int aux = 0;
 			if (i > 0) //Não é o primeiro elemento
 			{
-
 				if (linhaLida[i - 1] == ' ') //Antes da virgula tem espaço
 				{
-					printf ("virgula antes\n");
 					if (contador > 0) //Ele tava processando um token
 					{
 						palavra[contador + 1] = '\0'; //Finaliza token
@@ -197,10 +195,9 @@ Tokens* scannerPreprocessamento (Tokens* listaDeTokens, char* linhaLida, int qua
 			{
 				if (linhaLida[i + 1] == ' ') //Depois da virgula tem espaço
 				{
-					printf ("virgula depois\n");
 					if (contador > 0) //Ele tava processando um token
 					{
-						palavra[contador + 1] = '\0'; //Finaliza token
+						palavra[contador] = '\0'; //Finaliza token
 						listaDeTokens = insereToken (listaDeTokens, palavra); //Adiciona token
 						contador = 0; //Prepara para novo token
 					}
@@ -208,10 +205,20 @@ Tokens* scannerPreprocessamento (Tokens* listaDeTokens, char* linhaLida, int qua
 					palavra[aux + 2] = '\0'; //Prepara para finalizar token da virgula
 				}
 				else //Não tem espaço depois da virgula
-					palavra [aux + 1] = '\0'; //Prepara para finalizar token da virgula
+				{
+					if (contador > 0)
+					{
+						palavra [contador] = '\0'; //Prepara para finalizar token da virgula
+						listaDeTokens = insereToken (listaDeTokens, palavra); //Adiciona token
+					}
+					palavra [aux+1] = '\0';
+					contador = 0; //Prepara para novo token
+				}
 			}
 			else //Virgula é o ultimo caracter
+			{
 				palavra [aux + 1] = '\0'; //Prepara para finalizar token da virgula
+			}
 			palavra[aux] = ',';
 			listaDeTokens = insereToken (listaDeTokens, palavra);
 		}
@@ -219,13 +226,6 @@ Tokens* scannerPreprocessamento (Tokens* listaDeTokens, char* linhaLida, int qua
 		{
 			palavra[contador] = linhaLida [i];
 			contador++;
-			/*
-			int cont;
-			printf ("Token: ");
-			for (cont = 0; cont < contador; cont++)
-				printf ("%c", palavra[cont]);
-			printf ("\n");
-			//*/
 		}
 	}
 	//printTokens (listaDeTokens);
@@ -525,8 +525,8 @@ int tipoToken (char * string)
 	{
 		" ,", /*0*/
 		" , ", /*1*/
-		", ", /*2*/
-		",", /*3*/
+		",", /*2*/
+		", ", /*3*/
 		"ADD", /*4*/
 		"CONST", /*5*/
 		"COPY", /*6*/
