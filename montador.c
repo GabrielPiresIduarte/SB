@@ -71,7 +71,6 @@ typedef struct diretivaPre
 } DiretivaEQU;
 
 
-
 DiretivaEQU* diretivasPreprocessamento (DiretivaEQU *lista, Tokens *listaDeTokens, short int *flagDiretivas);
 DiretivaEQU* adicionaDiretivaPre (DiretivaEQU *lista, char *nome, char *operando, short int *flag);
 Tokens* scannerPreprocessamento (Tokens* lista, char* linhaLida, int quantia);
@@ -281,11 +280,8 @@ int preprocessamento (FILE *fp, char *arquivoSaida)
 	linhaLida = (char *)calloc (100, sizeof (char)); //Cria uma string com tamanho de 100 para ler linha
 	while (qtdLinhasLidas != -1)
 	{
-		//printf ("\n\n\nNOVA LINHA _------------------------------------------");
 		//Leitura de linha, ignorando comentario e espaços extras!
 		qtdLinhasLidas = leituraDeLinhaPre (fp, linhaLida);
-		//printTokens(listaDeTokensPre);
-		//printf ("\n\n\tLinhas lida: '%s' : %d\n", linhaLida, strlen (linhaLida));
 
 		//Execução das diretivas EQU e IF
 		if (strlen (linhaLida) > 0)
@@ -302,18 +298,13 @@ int preprocessamento (FILE *fp, char *arquivoSaida)
 			aux = 0;
 			listaDeTokensPre = scannerPreprocessamento (listaDeTokensPre, linhaLida, qtdLinhasLidas);
 			listaDiretivasEQU = diretivasPreprocessamento (listaDiretivasEQU, listaDeTokensPre, &flagDiretivas);
-			//printf ("\nLinhas lida: '%s' : %d\n", linhaLida, strlen (linhaLida));
-
+	
 			switch (flagDiretivas)
 			{
 			case 0:
-				//printf ("case 0\n");
 				//Adiciona linha ao arquivo de saída
 				if (flagFalsoIF == 0) //Comando anterior NÂO era um if com condição falsa
 				{
-					//printf ("0Flag: %d\n", flagFalsoIF);
-					//printf ("aquiataesd: %s\n", linhaLida);
-					//printTokens(listaDeTokensPre);
 					fputs (linhaLida, saida);
 					fputc ('\n', saida);
 				}
@@ -321,17 +312,13 @@ int preprocessamento (FILE *fp, char *arquivoSaida)
 				{
 					flagFalsoIF = 0;
 				}
-				//printf ("posFlag: %d\n", flagFalsoIF);
 				break;
 			case 1: //IF com condição falsa
-				//printf ("case 1");
 				flagFalsoIF = 1;
 				break;
 			case 2: // Lido um EQU ou IF verdadeiro, com erro sintatico ou não só ignora
-				//printf ("case 2");
 				break;
 			default:
-				//printf ("default");
 				break;
 			}
 		}
@@ -341,7 +328,6 @@ int preprocessamento (FILE *fp, char *arquivoSaida)
 		}
 
 	}
-	printTokens(listaDeTokensPre);
 	free (linhaLida);
 	fclose (saida);
 	rewind (fp);
@@ -375,7 +361,6 @@ DiretivaEQU* diretivasPreprocessamento (DiretivaEQU *lista, Tokens *listaDeToken
 	{
 		if (temp->tipo == EQU) //EQU
 		{
-			//printf ("Token analise diretiva: %s\n", temp->string);
 			if (contador != 1 || aux->qtdToken != 3) //EQU não é o segundo token da linha
 				printf ("Erro 8 - Uso invalido da diretiva EQU, use ROTULO: EQU VALOR - Linha: %d\n", aux->linhaOriginal);
 			else if (ant->tipo != ROTULO && ant->tipo > 2)//Token anterior não é rotulo, nem virgula
@@ -391,8 +376,6 @@ DiretivaEQU* diretivasPreprocessamento (DiretivaEQU *lista, Tokens *listaDeToken
 				if (flag)
 					printf ("Erro 12 - Rotulo Repetido - Linha: %d\n", aux->linhaOriginal);
 			}
-			//printf ("1Diretivas: \n");
-			//printDiretivaEQU (lista);
 			*flagDiretivas = 2;
 			return lista;
 		}
@@ -422,9 +405,6 @@ DiretivaEQU* diretivasPreprocessamento (DiretivaEQU *lista, Tokens *listaDeToken
 				else //Operando igual a 1
 					*flagDiretivas = 2;
 			}
-			//getchar ();
-			//printf ("2Diretivas: \n");
-			//printDiretivaEQU (lista);
 			return lista;
 		}
 		else
@@ -435,8 +415,6 @@ DiretivaEQU* diretivasPreprocessamento (DiretivaEQU *lista, Tokens *listaDeToken
 		}
 
 	}
-	//printf ("3Diretivas: \n");
-	//printDiretivaEQU (lista);
 	*flagDiretivas = 0;
 	return lista;
 }
@@ -449,6 +427,7 @@ DiretivaEQU* adicionaDiretivaPre (DiretivaEQU *lista, char *nome, char *operando
 	strcpy (novo->nomeRotulo, nome);
 	novo->nomeRotulo[strlen (nome) - 1] = '\0';
 	strcpy (novo->operando, operando);
+	
 	if (lista == NULL)
 	{
 		novo->prox = lista;
@@ -461,7 +440,7 @@ DiretivaEQU* adicionaDiretivaPre (DiretivaEQU *lista, char *nome, char *operando
 	ant = lista;
 	while (temp != NULL)
 	{
-		short int res = strcmp (temp->nomeRotulo, nome);
+		short int res = strcmp (temp->nomeRotulo, novo->nomeRotulo);
 		if (res == 0)
 		{
 			*flag = 1;
@@ -616,8 +595,7 @@ int leituraDeLinhaPre (FILE * fp, char * linha)
 				novoC = (fgetc(fp));
 			}
 			novoC = toupper (novoC);
-			//quantidadeLinhas++;
-			//printf ("pôs comentario: %d\n", quantidadeLinhas);
+
 		}
 		//Elimina espaço desnecessarios
 		if (contador > 0)
@@ -636,7 +614,6 @@ int leituraDeLinhaPre (FILE * fp, char * linha)
 		else if (contador == 0 && novoC == '\n')
 		{
 			quantidadeLinhas++;
-			//printf ("else if: %d\n", quantidadeLinhas);
 		}
 		else//Adiciona caracter lido à string
 		{
@@ -655,7 +632,6 @@ int leituraDeLinhaPre (FILE * fp, char * linha)
 		while (novoC == '\n' && contador == 0)
 		{
 			novoC = toupper (fgetc(fp));
-			//printf ("while: %d\n", quantidadeLinhas);
 			quantidadeLinhas++;
 		}
 	}
@@ -665,14 +641,11 @@ int leituraDeLinhaPre (FILE * fp, char * linha)
 	{
 		if (contador != 0)
 		{
-			//printf ("Contador diferente de zero no fim\n");
 			fseek(fp, 0, SEEK_END);
 			return quantidadeLinhas;
 		}
-		//printf ("Fim\n");
 		return -1;
 	}
-	//printf ("Qtd linha n recursiv: %d\n: %s", quantidadeLinhas, linha);
 	return quantidadeLinhas; //Retorna quantidade de linhas lidas até achar uma "válida"
 }
 
