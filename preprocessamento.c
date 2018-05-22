@@ -60,25 +60,31 @@ Token* criaToken ()
 }
 
 void liberaTokens (Tokens * lista)
+//*
 {
-	Tokens *temp;
-	Token *temp2, *temp3;
-	while (lista != NULL)
-	{
-		temp = lista;
-        temp3 = temp->token;
-		while (temp3 != NULL)
-		{
-            temp2 = temp3;
-			temp3 = temp3->prox;
-			if (temp2->string != NULL)
-				free (temp2->string);
-			free (temp2);
-		}
-		free (temp3);
-		lista = lista->proximaLinha;
-		free (temp);
+	Tokens *prox = lista->proximaLinha;
+	Token *atual, *seguinte;
+	while (prox != NULL){
+        prox = lista->proximaLinha;
+        atual = lista->token;
+        while (atual != NULL)
+        {
+            if (atual->prox != NULL)
+                seguinte = atual->prox;
+            else {
+                seguinte = NULL;
+            }
+            if (atual->string != NULL)
+            {
+                free (atual->string);
+            }
+            free (atual);
+            atual = seguinte;
+        }
+        free (lista);
+        lista = prox;
 	}
+//*/
 }
 
 
@@ -190,7 +196,7 @@ Tokens* preprocessamento (FILE *fp, char *arquivoSaida, Tokens *listaDeTokensPre
 
 
 	//Cria arquivo de saida
-	nomeArquivo = (char *)calloc ((strlen (arquivoSaida) + 4), sizeof (char));
+	nomeArquivo = (char *)calloc ((strlen (arquivoSaida) + 5), sizeof (char));
 	strcpy (nomeArquivo, arquivoSaida);
 	strcat (nomeArquivo, ".pre");
 	FILE *saida = fopen (nomeArquivo, "w");
@@ -586,7 +592,7 @@ Tokens* novaLinhaTokens (Tokens * lista, int linhaOriginal)
 {
 	Tokens *novo = (Tokens *)malloc(sizeof (Tokens));
 	novo->linhaOriginal = linhaOriginal;
-	novo->token = criaToken ();
+	novo->token = NULL;
 	novo->qtdToken = 0;
 	if (lista == NULL)
 	{
@@ -617,9 +623,10 @@ Tokens* insereToken (Tokens * lista, char * string)
 {
 	Token *novo = (Token *)malloc(sizeof (Token));
 	novo->tipo = tipoToken (string);
+	novo->prox = NULL;
 	if (string != NULL) //Somente se for um rotulo
 	{
-		novo->string = (char *)malloc(strlen (string) * sizeof (char));
+		novo->string = (char *)malloc((strlen (string)+1) * sizeof (char));
 		strcpy (novo->string, string);
 
 	}
