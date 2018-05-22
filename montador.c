@@ -316,7 +316,7 @@ printf ("Fim imprimi\n");
 
 ListaMacro* insereMacro (ListaMacro* lista, Tokens *linha)
 {
-  //  printf ("Insere Macro identificada: %s\n", linha->token->prox->string);
+    printf ("Insere Macro identificada: %s\n", linha->token->prox->string);
 	ListaMacro* tempLista = lista;
 	Tokens *tempLinha = linha;
     Tokens *old = linha;
@@ -355,19 +355,17 @@ ListaMacro* insereMacro (ListaMacro* lista, Tokens *linha)
 		else if (tempToken->tipo == ROTULO)
 		{
             printf ("'%s\n'", tempToken->string);
-            //getchar();
+            getchar();
 			tempLinha = substituiMacro(lista, tempLinha);
-            //getchar();
-            //printTokens(tempLinha);
-
+            getchar();
+            printTokens(tempLinha);
             Tokens *tempDelete = old->proximaLinha;
             tempDelete->proximaLinha = NULL;
             liberaTokens(tempDelete);
-
             old->proximaLinha = tempLinha;
             tempToken = tempLinha->token;
-            //printf ("%d", tempToken->tipo);
-            //getchar();
+            printf ("%d", tempToken->tipo);
+            getchar();
 		}
 		//procura parametros
 		//else
@@ -421,15 +419,15 @@ ListaMacro* insereMacro (ListaMacro* lista, Tokens *linha)
 	//linha = tempLinha;
 	//novo->fimMacro->proximaLinha= NULL;
 
-    //printf ("insere2-------------\n");
-	//printTokens(novo->fimMacro->proximaLinha->proximaLinha);
-	//getchar();
+    printf ("insere2-------------\n");
+	printTokens(novo->fimMacro->proximaLinha->proximaLinha);
+	getchar();
 	//tempLinha->proximaLinha = NULL;
     //liberaTokens(tempLinha);
-    //printf ("fim insere i2------------------\n");
-    //imprimiMacro(lista);
+    printf ("fim insere i2------------------\n");
+    imprimiMacro(lista);
 
-    //printf ("Fim insere ---------------------\n\n\n");
+    printf ("Fim insere ---------------------\n\n\n");
 	return lista;
 }
 
@@ -611,46 +609,49 @@ Tokens* macros (Tokens *listaDeTokens, FILE *arqOUT)
 
         printf ("Funcao macro: %d\n", aux->tipo);
 		short int flagErro = 0;
-		if (aux->tipo == MACRO)//Se é macro, vai conferir a sintaxw
+		if (aux->tipo == MACRO)//ROTULO)//Se é macro, vai conferir a sintaxw
 		{
-			if (temp->qtdToken <= 9 && temp->qtdToken>=3) //Confere por quantidade de tokens na linha
-			{
-                Token *aux2 = aux->prox;
-                if (aux2->tipo != ROTULO){ //Segundo token não é rotulo
-						printf("1Erro 13 - Uso invalido de MACRO - Linha: %d\n", temp->linhaOriginal);
-						printf("Erro 9 - Uso invalido de instrucao - Linha: %d\n", temp->linhaOriginal);
-                        flagErro = 1;
-                }
-                else {
-                    while (aux2->prox!=NULL)//Confere sintaxe
-                    {
-                        aux2 = aux2->prox;
-
-                        if (aux2->tipo <= 3) //Token não é virgula
+           // if (aux->prox != NULL){
+            //    aux = aux->prox;
+                if (temp->qtdToken <= 9 && temp->qtdToken>=3) //Confere por quantidade de tokens na linha
+                {
+                    Token *aux2 = aux->prox;
+                    if (aux2->tipo != ROTULO){ //Segundo token não é rotulo
+                            printf("1Erro 13 - Uso invalido de MACRO - Linha: %d\n", temp->linhaOriginal);
+                            printf("Erro 9 - Uso invalido de instrucao - Linha: %d\n", temp->linhaOriginal);
+                            flagErro = 1;
+                    }
+                    else {
+                        while (aux2->prox!=NULL)//Confere sintaxe
                         {
                             aux2 = aux2->prox;
-                        }
-                        if (aux2->tipo != ROTULO)//Token não é argumento, é erro, tem que ser rotulo ou virgulo
-                        {
-                            flagErro = 1;
-                            printf("Erro 13 - Uso invalido de MACRO - Linha: %d\n", temp->linhaOriginal);
-                            printf("Erro 9 - Uso invalido de instrucao - Linha: %d\n", temp->linhaOriginal);
-                        }
-                        else if  (aux2->string[0] != '&')//Confere erro lexico do token
-                        {
-                            flagErro = 1;
-                            printf("Erro 13 - Uso invalido de MACRO - Linha: %d\n", temp->linhaOriginal);
-                            printf("Erro 14 - Parametro invalido - Linha: %d\n", temp->linhaOriginal);
-                        }
 
+                            if (aux2->tipo <= 3) //Token não é virgula
+                            {
+                                aux2 = aux2->prox;
+                            }
+                            if (aux2->tipo != ROTULO)//Token não é argumento, é erro, tem que ser rotulo ou virgulo
+                            {
+                                flagErro = 1;
+                                printf("Erro 13 - Uso invalido de MACRO - Linha: %d\n", temp->linhaOriginal);
+                                printf("Erro 9 - Uso invalido de instrucao - Linha: %d\n", temp->linhaOriginal);
+                            }
+                            else if  (aux2->string[0] != '&')//Confere erro lexico do token
+                            {
+                                flagErro = 1;
+                                printf("Erro 13 - Uso invalido de MACRO - Linha: %d\n", temp->linhaOriginal);
+                                printf("Erro 14 - Parametro invalido - Linha: %d\n", temp->linhaOriginal);
+                            }
+
+                        }
                     }
-            	}
-			}
-			else
-			{
+                }
+                else
+                {
                 flagErro = 1;
 				printf("Erro 13 - Uso inv�lido de MACRO - Linha: %d\n", temp->linhaOriginal);
 			}
+            //}
 		}
 		else if (aux->tipo == ENDMACRO)
 		{
@@ -681,6 +682,7 @@ Tokens* macros (Tokens *listaDeTokens, FILE *arqOUT)
             imprimiMacro(lista);
             printf ("Macrofim-------------\n\n\n");
             flagErro = 0;
+            getchar();
             continue;
 		}
 		Token *auxToken = temp->token;
