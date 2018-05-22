@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 	}
 
 	//Primeiro argumento - Abertura do arquivo de entrada
-	char *nomeArquivo = (char *)malloc ((strlen (argv[1]) + 4) * sizeof (char));
+	char *nomeArquivo = (char *)malloc ((strlen (argv[1]) + 7) * sizeof (char));
 	if(nomeArquivo == NULL)
 	{
 		printf("ERRO_4\nMem�ria insuficiente");
@@ -104,11 +104,13 @@ int main(int argc, char** argv)
 	strcat (nomeArquivo, ".macro");
 	FILE *arqOUTmacro = fopen (nomeArquivo, "w");
 
+	//*
 	if (arqOUTmacro == NULL)
 	{
 		printf ("ERRO_16\nErro ao gerar arquivo de saida");
 		return 2;
 	}
+	//*/
 
 
 	free (nomeArquivo);
@@ -139,7 +141,7 @@ int main(int argc, char** argv)
 
 		printf ("Macros\n");
 		listaDeTokens = macros (listaDeTokens, arqOUTmacro);
-        gravaMacro (listaDeTokens, arqOUTmacro);
+        gravaMacro (listaDeTokens, arqIN);
 		printf ("ApareceuIsso????\n");
 
 		break;
@@ -154,7 +156,7 @@ int main(int argc, char** argv)
 	}
 	liberaTokens(listaDeTokens);
 	//if (arqIN != NULL)
-	fclose (arqOUTmacro);
+	//fclose (arqOUTmacro);
     //fclose (arqIN);
 	return 0;
 }
@@ -170,6 +172,7 @@ void liberaMacros (ListaMacro *lista)
 	ListaMacro *temp = lista;
 	Tokens *fim;
 	Parametro *aux;
+	liberaTokens(lista->inicioMacro);
 	while (temp != NULL)
 	{
 		int i;
@@ -195,11 +198,18 @@ void liberaMacros (ListaMacro *lista)
 	}
 }
 
-void gravaMacro (Tokens *lista, FILE *arqOUT){
+void gravaMacro (Tokens *lista, FILE *arqOUT2){
+/*
 printf("inicioGrava\n");
 //  ofstream myfile;
   //myfile.open ("teste.txt");
-    char tabelaTokens [27][13] =
+  printf ("adskjfam\n");
+  //fclose (arqOUT);
+  printf ("adskjfam\n");
+  //teste
+  FILE *arqOUT = fopen("testeTHiaglolindao", "w");
+   */
+  char tabelaTokens [27][13] =
 	{
 		" ,", /*0*/
 		" , ", /*1*/
@@ -229,7 +239,7 @@ printf("inicioGrava\n");
 		"SUB", /*25*/
 		"TEXT", /*26*/
 	};
-
+/*
 	Tokens *temp = lista;
 	Token *aux;
 	short int i;
@@ -258,12 +268,7 @@ printf("inicioGrava\n");
                 else
                 {
 	printf("0grava string tipo: %d - '%s'\n", aux->tipo, tabelaTokens[aux->tipo]);
-
-                    //fputs (tabelaTokens[aux->tipo], arqOUT);
-                    fputs ("tabelaTokens[aux->tipo]", arqOUT);
-     //           myfile << "Writing this to a file.\n";
-	printf("firing tipo\n");
-       //         myfile << tabelaTokens[aux->tipo];
+                fputs ("tabelaTokens[aux->tipo]", arqOUT);
 	printf("fim grava string tipo\n");
                 }
                 //if (aux->prox != NULL)
@@ -276,13 +281,13 @@ printf("inicioGrava\n");
 	}
  // myfile.close();
 printf("fim Grava\n");
+*/
 }
-
 
 
 void imprimiMacro (ListaMacro *lista)
 {
-printf ("imprimi\n");
+printf ("imprimi macro\n");
 	ListaMacro *temp = lista;
 	Parametro *aux;
 	while (temp != NULL)
@@ -290,6 +295,7 @@ printf ("imprimi\n");
 		int i;
 		printf ("Macro: %s\n", temp->nomeMacro);
 		printf ("\tInicio: %d\n", temp->inicioMacro->linhaOriginal);
+		printTokens(temp->inicioMacro);
 		printf ("\tFim: %d\n", temp->fimMacro->linhaOriginal);
 		for (i = 0; i < 4; i++)
 		{
@@ -310,9 +316,10 @@ printf ("Fim imprimi\n");
 
 ListaMacro* insereMacro (ListaMacro* lista, Tokens *linha)
 {
-    printf ("Insere Macro identificada: %s\n", linha->token->prox->string);
+  //  printf ("Insere Macro identificada: %s\n", linha->token->prox->string);
 	ListaMacro* tempLista = lista;
 	Tokens *tempLinha = linha;
+    Tokens *old = linha;
 	Token *tempToken = linha->token->prox;
 	while (tempLista != NULL)
     {
@@ -327,6 +334,7 @@ ListaMacro* insereMacro (ListaMacro* lista, Tokens *linha)
     }
 
 	ListaMacro *novo = (ListaMacro *)malloc (sizeof (ListaMacro));
+	novo->nomeMacro = (char *)malloc ((strlen (tempLinha->token->prox->string)+1)*sizeof (char));
 	strcpy (novo->nomeMacro, tempLinha->token->prox->string);
 	novo->prox = lista;
 	for (int i = 0; i<4; i++){
@@ -346,66 +354,90 @@ ListaMacro* insereMacro (ListaMacro* lista, Tokens *linha)
 		}
 		else if (tempToken->tipo == ROTULO)
 		{
-			//Substitui ou nao por outra macro
-		}
-		else //procura parametros
-		{
-			while (tempToken!=NULL)
-			{
-				if (tempToken->tipo == ROTULO && tempToken->string[0] == '&')
-				{
+            printf ("'%s\n'", tempToken->string);
+            //getchar();
+			tempLinha = substituiMacro(lista, tempLinha);
+            //getchar();
+            //printTokens(tempLinha);
 
-					int j;
-					if (novo->parametro[0] == NULL)
+            Tokens *tempDelete = old->proximaLinha;
+            tempDelete->proximaLinha = NULL;
+            liberaTokens(tempDelete);
+
+            old->proximaLinha = tempLinha;
+            tempToken = tempLinha->token;
+            //printf ("%d", tempToken->tipo);
+            //getchar();
+		}
+		//procura parametros
+		//else
+        //        {
+        while (tempToken!=NULL)
+        {
+            if (tempToken->tipo == ROTULO && tempToken->string[0] == '&')
+            {
+
+                int j;
+                if (novo->parametro[0] == NULL)
+                {
+                    Parametro *novoParametro = (Parametro *)malloc(sizeof (Parametro));
+                    novoParametro->substitui = tempToken;
+                    novoParametro->prox = novo->parametro[0];
+                    novo->parametro[0] = novoParametro;
+                }
+                else {
+                    for (j = 0; j < 4; j++)
                     {
-                        Parametro *novoParametro = (Parametro *)malloc(sizeof (Parametro));
-                        novoParametro->substitui = tempToken;
-                        novoParametro->prox = novo->parametro[0];
-                        novo->parametro[0] = novoParametro;
-                    }
-                    else {
-                        for (j = 0; j < 4; j++)
+                    if (novo->parametro[j] != NULL)
                         {
-                        if (novo->parametro[j] != NULL)
+                            if (strcmp (tempToken->string, novo->parametro[j]->substitui->string) == 0)
                             {
-                                if (strcmp (tempToken->string, novo->parametro[j]->substitui->string) == 0)
-                                {
-                                    Parametro *novoParametro = (Parametro *)malloc(sizeof (Parametro));
-                                    novoParametro->substitui = tempToken;
-                                    novoParametro->prox = novo->parametro[j];
-                                    novo->parametro[j] = novoParametro;
-                                break;
-                                }
-                            }
-                            else {
                                 Parametro *novoParametro = (Parametro *)malloc(sizeof (Parametro));
+                                novoParametro->substitui = tempToken;
+                                novoParametro->prox = novo->parametro[j];
                                 novo->parametro[j] = novoParametro;
-                                novo->parametro[j]->substitui = tempToken;
-                                novo->parametro[j]->prox = NULL;
-                                break;
+                            break;
                             }
                         }
-					}
-				}
-				tempToken = tempToken->prox;
-			}
-		}
+                        else {
+                            Parametro *novoParametro = (Parametro *)malloc(sizeof (Parametro));
+                            novo->parametro[j] = novoParametro;
+                            novo->parametro[j]->substitui = tempToken;
+                            novo->parametro[j]->prox = NULL;
+                            break;
+                        }
+                    }
+                }
+            }
+            tempToken = tempToken->prox;
+        }
+		//}
+		old = tempLinha;
 		tempLinha = tempLinha->proximaLinha;
 	}
 
-	novo->fimMacro = tempLinha;
+	novo->fimMacro = old;
+	//*linha = *tempLinha;
+	//linha = tempLinha;
+	//novo->fimMacro->proximaLinha= NULL;
 
-    printf ("i2\n");
+    //printf ("insere2-------------\n");
+	//printTokens(novo->fimMacro->proximaLinha->proximaLinha);
+	//getchar();
+	//tempLinha->proximaLinha = NULL;
+    //liberaTokens(tempLinha);
+    //printf ("fim insere i2------------------\n");
+    //imprimiMacro(lista);
+
+    //printf ("Fim insere ---------------------\n\n\n");
 	return lista;
 }
 
 Tokens* copiaMacro (Tokens *lista, Tokens *inicioMacro, Tokens *fimMacro)
 {
-    printf ("copiaMacro\n");
     Tokens *temp = inicioMacro->proximaLinha, *oldLinha = NULL, *novo, *primeiraLinha = NULL;
-
     //Enquanto não chegar ao fim da macro
-    while (temp != fimMacro){
+    while (temp != NULL){
         //Cria novo tokens
         novo = (Tokens *)malloc(sizeof (Tokens));
         novo->linhaOriginal = temp->linhaOriginal;
@@ -431,17 +463,16 @@ Tokens* copiaMacro (Tokens *lista, Tokens *inicioMacro, Tokens *fimMacro)
             Token *novoToken = (Token*) malloc (sizeof (Token));
             novoToken->tipo = aux->tipo;
             novoToken->prox = NULL;
-
             //Se o token é um rotulo
             if (aux->tipo == ROTULO)
             {
                 int qtd = strlen (aux->string);
-                novoToken->string = (char *)malloc(qtd* sizeof(char));
+                novoToken->string = (char *)malloc((qtd+1)* sizeof(char));
                 strcpy (novoToken->string, aux->string);
             }
-            else
+            else{
                 novoToken->string = NULL;
-
+            }
             //Prepara para retornar o primeiro token
             if (primeiroToken == NULL){
                 primeiroToken = novoToken;
@@ -451,14 +482,15 @@ Tokens* copiaMacro (Tokens *lista, Tokens *inicioMacro, Tokens *fimMacro)
             if (oldToken != NULL){
                 oldToken->prox = novoToken;
             }
-            oldToken = novoToken;
 
+            oldToken = novoToken;
             aux = aux->prox;
         }
         novo->token = primeiroToken;
         temp = temp->proximaLinha;
     }
     lista = primeiraLinha;
+    //printTokens(lista);
     printf ("Fim copia\n");
     return lista;
 }
@@ -507,8 +539,9 @@ Tokens* substituiMacro (ListaMacro* listaMacro, Tokens *listaDeTokens)
                     //Enquanto não percorrer todos os parametros
                     while (tempParametro != NULL){
                         //Substitui parametro
+                        if (tempParametro->substitui->string != NULL)
+                            tempParametro->substitui->string = (char *)malloc((strlen (auxToken->string) + 1)*sizeof (char));
                         strcpy (tempParametro->substitui->string, auxToken->string);
-
                         //Segue para o proximo parametro
                         tempParametro = tempParametro->prox;
                     }
@@ -519,6 +552,8 @@ Tokens* substituiMacro (ListaMacro* listaMacro, Tokens *listaDeTokens)
             if (auxToken->prox != NULL)  {printf ("Erro 15 - Quantidade invalida de parametros para macro"); break;}
 
             //Chama função para copiar a macro
+            printf ("lista-----------------\n");
+            imprimiMacro(lista);
             listaDeTokens = copiaMacro (listaDeTokens, lista->inicioMacro, lista->fimMacro);
             printTokens(listaDeTokens);
             break;
@@ -526,18 +561,49 @@ Tokens* substituiMacro (ListaMacro* listaMacro, Tokens *listaDeTokens)
         lista = lista->prox;
     }
 
-printf ("s2\n");
     printTokens(listaDeTokens);
+printf ("s2\n");
     return listaDeTokens;
 }
 
 Tokens* macros (Tokens *listaDeTokens, FILE *arqOUT)
 {
-    printTokens(listaDeTokens);
+    //printTokens(listaDeTokens);
 	Tokens *temp = listaDeTokens, *anterior = listaDeTokens;
 	Token *aux;
 	ListaMacro *lista;
 	lista = criaMacros();
+     char tabelaTokens [27][13] =
+        {
+            " ,", /*0*/
+            " , ", /*1*/
+            ",", /*2*/
+            ", ", /*3*/
+            "ADD", /*4*/
+            "CONST", /*5*/
+            "COPY", /*6*/
+            "DATA", /*7*/
+            "DIV", /*8*/
+            "ENDMACRO", /*9*/
+            "EQU", /*10*/
+            "IF", /*11*/
+            "INPUT", /*12*/
+            "JMP", /*13*/
+            "JMPN", /*14*/
+            "JMPP", /*15*/
+            "JMPZ", /*16*/
+            "LOAD", /*17*/
+            "MACRO", /*18*/
+            "MULT", /*19*/
+            "OUTPUT", /*20*/
+            "SECTION", /*21*/
+            "SPACE", /*22*/
+            "STOP", /*23*/
+            "STORE", /*24*/
+            "SUB", /*25*/
+            "TEXT", /*26*/
+        };
+
 
 	while (temp != NULL)
 	{
@@ -596,19 +662,44 @@ Tokens* macros (Tokens *listaDeTokens, FILE *arqOUT)
             temp = substituiMacro (lista, temp);
             if (temp!=anterior)
                 anterior->proximaLinha = temp;
-                printf ("a1");
-            printTokens(temp);
+            //printf ("a1");
+            //printTokens(temp);
 		}
 
 		if (aux->tipo == MACRO && flagErro == 0)
 		{
            lista = insereMacro (lista, temp);
             if (temp!=anterior)
-                anterior->proximaLinha = lista->fimMacro;
-			temp = lista->fimMacro;
+                anterior->proximaLinha = lista->fimMacro->proximaLinha->proximaLinha; //Elimina
+            printf ("Macro-------------\n");
+            temp = anterior->proximaLinha; //temp continua com linha apos endmacro
+            printTokens(temp);
+            anterior = lista->fimMacro->proximaLinha; //Linha endmacro
+            lista->fimMacro->proximaLinha = NULL;
+            anterior->proximaLinha = NULL; //Retira o endmacro da lista de macros
+            liberaTokens(anterior); //Libera esse espaço de memoria (endmacro)
+            imprimiMacro(lista);
+            printf ("Macrofim-------------\n\n\n");
+            flagErro = 0;
+            continue;
 		}
-        anterior = temp;
+		Token *auxToken = temp->token;
+		while (auxToken!=NULL)
+		{
+            if (auxToken->tipo == ROTULO || auxToken->tipo == NUMERO)
+            {
+                fputs (auxToken->string, arqOUT);
+            }
+            else
+            {
+                fputs (tabelaTokens[auxToken->tipo], arqOUT);
+            }
+            fputc (' ', arqOUT);
+            auxToken = auxToken->prox;
+        }
+        fputc ('\n', arqOUT);
 
+        anterior = temp;
 		temp = temp->proximaLinha;
 		flagErro = 0;
 	}
