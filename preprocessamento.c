@@ -76,12 +76,15 @@ void liberaTokens (Tokens * lista)
             }
             if (atual->string != NULL)
             {
-                //free (atual->string);
+                char *tempDEL = atual->string;
+                free (tempDEL);
             }
-           //free (atual);
+            if (atual != NULL)
+                free (atual);
             atual = seguinte;
         }
-        //free (lista);
+        if (lista!=NULL)
+            free (lista);
         lista = prox;
 	}
 //*/
