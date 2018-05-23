@@ -76,12 +76,12 @@ void liberaTokens (Tokens * lista)
             }
             if (atual->string != NULL)
             {
-                free (atual->string);
+                //free (atual->string);
             }
-            free (atual);
+           //free (atual);
             atual = seguinte;
         }
-        free (lista);
+        //free (lista);
         lista = prox;
 	}
 //*/
@@ -285,9 +285,10 @@ DiretivaEQU* diretivasPreprocessamento (DiretivaEQU *lista, Tokens *listaDeToken
 
 	short int contador = 0;
 	Token *temp, *ant;
-	Tokens *aux = listaDeTokens;
+	Tokens *aux = listaDeTokens, *anteriorTokens;
 	while (aux->proximaLinha != NULL)
 	{
+        anteriorTokens = aux;
 		aux = aux->proximaLinha;
 	}
 	temp = aux->token;
@@ -307,11 +308,16 @@ DiretivaEQU* diretivasPreprocessamento (DiretivaEQU *lista, Tokens *listaDeToken
 			else  //n�o tem erro...ainda:
 			{
 				short int flag = 0;
-				if (ant->string[strlen (ant->string)] != ':')
+				if (ant->string[strlen (ant->string)-1] != ':')
                     printf ("Erro lexico, falta : no rotulo - linha: %d\n", aux->linhaOriginal);
                 else
-                    ant->string[strlen (ant->string)] = '\0';
+                    ant->string[strlen (ant->string)-1] = '\0';
+
+
 				lista = adicionaDiretivaPre (lista, ant->string, temp->prox->string, &flag);
+				anteriorTokens->proximaLinha = NULL;
+				liberaTokens(aux);
+				aux = anteriorTokens;
 				if (flag)
 					printf ("Erro 12 - Rotulo Repetido - Linha: %d\n", aux->linhaOriginal);
 			}
@@ -344,6 +350,9 @@ DiretivaEQU* diretivasPreprocessamento (DiretivaEQU *lista, Tokens *listaDeToken
 				else //Operando igual a 1
 					*flagDiretivas = 2;
 			}
+            anteriorTokens->proximaLinha = NULL;
+			liberaTokens(aux);
+			aux = anteriorTokens;
 
 			return lista;
 		}
@@ -418,7 +427,6 @@ DiretivaEQU* adicionaDiretivaPre (DiretivaEQU *lista, char *nome, char *operando
 short int procuraEQU (DiretivaEQU *lista, char *string)
 {
 	DiretivaEQU *temp = lista;
-	//printDiretivaEQU(lista);
 	while (temp != NULL)
 	{
 		int res = strcmp(string, temp->nomeRotulo);

@@ -355,6 +355,9 @@ Tokens* macros (Tokens *listaDeTokens, FILE *arqOUT)
 
 	while (temp != NULL)
 	{
+        //printf ("\n");
+        //printTokens (listaDeTokens);
+        //printf ("while\n");
 		aux = temp->token;
 
 		short int flagErro = 0;
@@ -434,15 +437,34 @@ Tokens* macros (Tokens *listaDeTokens, FILE *arqOUT)
 
 		if (aux->tipo == MACRO && flagErro == 0)
 		{
-           lista = insereMacro (lista, temp);
+            //printf ("antes da macro\n");
+            //getchar ();
+            //printTokens (listaDeTokens);
+            lista = insereMacro (lista, temp);
+            //printf ("\nantes da 'correcao'\n");
+            //printTokens (listaDeTokens);
+            //getchar ();
+
             if (temp!=anterior)
                 anterior->proximaLinha = lista->fimMacro->proximaLinha->proximaLinha; //Elimina
+
             temp = anterior->proximaLinha; //temp continua com linha apos endmacro
+            Tokens *tempDelete = lista->fimMacro->proximaLinha; //Linha endmacro
+            lista->fimMacro->proximaLinha = NULL;
+            tempDelete->proximaLinha = NULL; //Retira o endmacro da lista de macros
+            liberaTokens(tempDelete); //Libera esse espaço de memoria (endmacro)
+
+            /*
             anterior = lista->fimMacro->proximaLinha; //Linha endmacro
             lista->fimMacro->proximaLinha = NULL;
             anterior->proximaLinha = NULL; //Retira o endmacro da lista de macros
             liberaTokens(anterior); //Libera esse espaço de memoria (endmacro)
+            */
             flagErro = 0;
+            //printf ("pos correcao\n");
+            //printTokens (listaDeTokens);
+            //printf ("\n%d\n", temp->linhaOriginal);
+            //getchar();
             continue;
 		}
 		Token *auxToken = temp->token;
@@ -464,6 +486,8 @@ Tokens* macros (Tokens *listaDeTokens, FILE *arqOUT)
         anterior = temp;
 		temp = temp->proximaLinha;
 		flagErro = 0;
+
+
 	}
     liberaMacros(lista);
 	return listaDeTokens;
