@@ -565,7 +565,8 @@ Tokens* algoritmoDeUmaPassagem (Tokens *listaDeTokens, FILE *arqOUT){
                    }
                    break;
                default:
-                   endereco++;
+                   if (atoken->tipo>3)
+                    endereco++;
                    break;
 
            }
@@ -580,6 +581,7 @@ Tokens* algoritmoDeUmaPassagem (Tokens *listaDeTokens, FILE *arqOUT){
     }
 
    completaPassagem (nomeQueEsqueci, ts, listaDeTokens);
+   //printTokens(listaDeTokens);
    gravaObjeto(listaDeTokens,arqOUT);
    liberaPassagem(nomeQueEsqueci);
    return listaDeTokens;
@@ -813,11 +815,14 @@ void gravaObjeto (Tokens *listaDeTokens, FILE *arqOUTobjeto){
         {
             if (atoken->tipo == ROTULO){
                 fputs(atoken->string, arqOUTobjeto);
+                fputc(' ', arqOUTobjeto);
             }
-            else{
+            else if (atoken->tipo > 3)
+            {
                 fputs(tabelaTokens [atoken->tipo], arqOUTobjeto);
-                }
-            fputc(' ', arqOUTobjeto);
+                fputc(' ', arqOUTobjeto);
+
+            }
             atoken = atoken->prox;
         }
         lista = lista->proximaLinha;
