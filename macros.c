@@ -33,64 +33,64 @@
 
 ListaMacro* criaMacros()
 {
-	return NULL;
+    return NULL;
 }
 
 void liberaMacros (ListaMacro *lista)
 {
-	ListaMacro *temp = lista;
-	Tokens *fim;
-	Parametro *aux;
-	liberaTokens(lista->inicioMacro);
-	while (temp != NULL)
-	{
-		int i;
-		for (i = 0; i < 4; i++)
-		{
-			aux = temp->parametro[i];
-			while (aux != NULL)
-			{
-				temp->parametro[i] = aux->prox;
-				free (aux);
-				aux = temp->parametro[i];
-			}
-		}
+    ListaMacro *temp = lista;
+    Tokens *fim;
+    Parametro *aux;
+    liberaTokens(lista->inicioMacro);
+    while (temp != NULL)
+    {
+        int i;
+        for (i = 0; i < 4; i++)
+        {
+            aux = temp->parametro[i];
+            while (aux != NULL)
+            {
+                temp->parametro[i] = aux->prox;
+                free (aux);
+                aux = temp->parametro[i];
+            }
+        }
 
         fim = lista->fimMacro;
         fim->proximaLinha = NULL;
 
         liberaTokens(temp->inicioMacro);
 
-		lista = temp->prox;
-		free (temp);
-		temp = lista;
-	}
+        lista = temp->prox;
+        free (temp);
+        temp = lista;
+    }
 }
 
 void imprimiMacro (ListaMacro *lista)
 {
 printf ("imprimi macro\n");
-	ListaMacro *temp = lista;
-	Parametro *aux;
-	while (temp != NULL)
-	{
-		int i;
-		printf ("Macro: %s\n", temp->nomeMacro);
-		printf ("\tInicio: %d\n", temp->inicioMacro->linhaOriginal);
-		printTokens(temp->inicioMacro);
-		printf ("\tFim: %d\n", temp->fimMacro->linhaOriginal);
-		for (i = 0; i < 4; i++)
-		{
-			printf ("\t\tParametro: %d\n", i);
-			aux = temp->parametro[i];
-			while (aux != NULL)
-			{
-				printf ("\t\t\t%s\n", aux->substitui->string);
-				aux = aux->prox;
-			}
-		}
-		temp = temp->prox;
-	}
+    ListaMacro *temp = lista;
+    Parametro *aux;
+    while (temp != NULL)
+    {
+        int i;
+        printf ("Macro: %s\n", temp->nomeMacro);
+        printf ("\tInicio: %d\n", temp->inicioMacro->linhaOriginal);
+        printTokens(temp->inicioMacro);
+        printf ("\tFim: %d\n", temp->fimMacro->linhaOriginal);
+        for (i = 0; i < 4; i++)
+        {
+            printf ("\t\tParametro: %d\n", i);
+            aux = temp->parametro[i];
+            while (aux != NULL)
+            {
+                printf ("\t\t\t%s\n", aux->substitui->string);
+                aux = aux->prox;
+            }
+        }
+        temp = temp->prox;
+    }
 printf ("Fim imprimi\n");
 }
 
@@ -98,11 +98,11 @@ printf ("Fim imprimi\n");
 
 ListaMacro* insereMacro (ListaMacro* lista, Tokens *linha)
 {
-	ListaMacro* tempLista = lista;
-	Tokens *tempLinha = linha;
+    ListaMacro* tempLista = lista;
+    Tokens *tempLinha = linha;
     Tokens *old = linha;
-	Token *tempToken = linha->token->prox;
-	while (tempLista != NULL)
+    Token *tempToken = linha->token->prox;
+    while (tempLista != NULL)
     {
         int res = strcmp (tempLista->nomeMacro, tempToken->string);
         if (res == 0)
@@ -114,36 +114,36 @@ ListaMacro* insereMacro (ListaMacro* lista, Tokens *linha)
         tempLista = tempLista->prox;
     }
 
-	ListaMacro *novo = (ListaMacro *)malloc (sizeof (ListaMacro));
-	novo->nomeMacro = (char *)malloc ((strlen (tempLinha->token->prox->string)+1)*sizeof (char));
-	strcpy (novo->nomeMacro, tempLinha->token->prox->string);
-	novo->prox = lista;
-	for (int i = 0; i<4; i++){
+    ListaMacro *novo = (ListaMacro *)malloc (sizeof (ListaMacro));
+    novo->nomeMacro = (char *)malloc ((strlen (tempLinha->token->prox->string)+1)*sizeof (char));
+    strcpy (novo->nomeMacro, tempLinha->token->prox->string);
+    novo->prox = lista;
+    for (int i = 0; i<4; i++){
         novo->parametro[i]=NULL;
-	}
+    }
     lista = novo;
-	novo->inicioMacro = linha;
+    novo->inicioMacro = linha;
     tempLinha = tempLinha->proximaLinha;
 
 
     while (tempLinha != NULL)
-	{
+    {
         tempToken = tempLinha->token;
-		if (tempToken->tipo == ENDMACRO) //Fim da macro
-		{
-			break;
-		}
-		else if (tempToken->tipo == ROTULO)
-		{
-			tempLinha = substituiMacro(lista, tempLinha);
+        if (tempToken->tipo == ENDMACRO) //Fim da macro
+        {
+            break;
+        }
+        else if (tempToken->tipo == ROTULO)
+        {
+            tempLinha = substituiMacro(lista, tempLinha);
             Tokens *tempDelete = old->proximaLinha;
             tempDelete->proximaLinha = NULL;
             liberaTokens(tempDelete);
             old->proximaLinha = tempLinha;
             tempToken = tempLinha->token;
 
-		}
-		//procura parametros
+        }
+        //procura parametros
         while (tempToken!=NULL)
         {
             if (tempToken->tipo == ROTULO && tempToken->string[0] == '&')
@@ -183,12 +183,12 @@ ListaMacro* insereMacro (ListaMacro* lista, Tokens *linha)
             }
             tempToken = tempToken->prox;
         }
-		old = tempLinha;
-		tempLinha = tempLinha->proximaLinha;
-	}
+        old = tempLinha;
+        tempLinha = tempLinha->proximaLinha;
+    }
 
-	novo->fimMacro = old;
-	return lista;
+    novo->fimMacro = old;
+    return lista;
 }
 
 Tokens* copiaMacro (Tokens *lista, Tokens *inicioMacro, Tokens *fimMacro)
@@ -317,10 +317,10 @@ Tokens* substituiMacro (ListaMacro* listaMacro, Tokens *listaDeTokens)
 
 Tokens* macros (Tokens *listaDeTokens, FILE *arqOUT)
 {
-	Tokens *temp = listaDeTokens, *anterior = listaDeTokens;
-	Token *aux;
-	ListaMacro *lista;
-	lista = criaMacros();
+    Tokens *temp = listaDeTokens, *anterior = listaDeTokens;
+    Token *aux;
+    ListaMacro *lista;
+    lista = criaMacros();
      char tabelaTokens [27][13] =
         {
             " ,", /*0*/
@@ -353,18 +353,18 @@ Tokens* macros (Tokens *listaDeTokens, FILE *arqOUT)
         };
 
 
-	while (temp != NULL)
-	{
+    while (temp != NULL)
+    {
         //printf ("\n");
         //printTokens (listaDeTokens);
         //printf ("while\n");
-		aux = temp->token;
+        aux = temp->token;
 
-		short int flagErro = 0;
-		if (aux->tipo == ROTULO)//Se é macro, vai conferir a sintaxw
-		{
+        short int flagErro = 0;
+        if (aux->tipo == ROTULO)//Se é macro, vai conferir a sintaxw
+        {
             if (aux->prox != NULL)
-			{
+            {
                 Token *tempOld = aux, *proxTok;
                 proxTok = aux->prox;
                 if (proxTok->tipo == MACRO)
@@ -381,9 +381,9 @@ Tokens* macros (Tokens *listaDeTokens, FILE *arqOUT)
                     temp->token = aux;
                 }
             }
-		}
-		if (aux->tipo == MACRO)//ROTULO)//Se é macro, vai conferir a sintaxw
-		{
+        }
+        if (aux->tipo == MACRO)//ROTULO)//Se é macro, vai conferir a sintaxw
+        {
                 if (temp->qtdToken <= 9 && temp->qtdToken>=3) //Confere por quantidade de tokens na linha
                 {
                     Token *aux2 = aux->prox;
@@ -420,23 +420,23 @@ Tokens* macros (Tokens *listaDeTokens, FILE *arqOUT)
                 else
                 {
                 flagErro = 1;
-				printf("Erro 13 - Uso inv�lido de MACRO - Linha: %d\n", temp->linhaOriginal);
-			}
-		}
-		else if (aux->tipo == ENDMACRO)
-		{
+                printf("Erro 13 - Uso inv�lido de MACRO - Linha: %d\n", temp->linhaOriginal);
+            }
+        }
+        else if (aux->tipo == ENDMACRO)
+        {
             flagErro = 1;
-			printf("Erro 13 - Uso inv�lido de MACRO - Linha: %d\n", temp->linhaOriginal);
-		}
+            printf("Erro 13 - Uso inv�lido de MACRO - Linha: %d\n", temp->linhaOriginal);
+        }
 
-		else if (aux->tipo == ROTULO){
+        else if (aux->tipo == ROTULO){
             temp = substituiMacro (lista, temp);
             if (temp!=anterior)
                 anterior->proximaLinha = temp;
-		}
+        }
 
-		if (aux->tipo == MACRO && flagErro == 0)
-		{
+        if (aux->tipo == MACRO && flagErro == 0)
+        {
             //printf ("antes da macro\n");
             //getchar ();
             //printTokens (listaDeTokens);
@@ -466,10 +466,10 @@ Tokens* macros (Tokens *listaDeTokens, FILE *arqOUT)
             //printf ("\n%d\n", temp->linhaOriginal);
             //getchar();
             continue;
-		}
-		Token *auxToken = temp->token;
-		while (auxToken!=NULL)
-		{
+        }
+        Token *auxToken = temp->token;
+        while (auxToken!=NULL)
+        {
             if (auxToken->tipo == ROTULO || auxToken->tipo == NUMERO)
             {
                 fputs (auxToken->string, arqOUT);
@@ -484,11 +484,11 @@ Tokens* macros (Tokens *listaDeTokens, FILE *arqOUT)
         fputc ('\n', arqOUT);
 
         anterior = temp;
-		temp = temp->proximaLinha;
-		flagErro = 0;
+        temp = temp->proximaLinha;
+        flagErro = 0;
 
 
-	}
+    }
     liberaMacros(lista);
-	return listaDeTokens;
+    return listaDeTokens;
 }

@@ -264,8 +264,6 @@ Tokens* preprocessamento (FILE *fp, char *arquivoSaida, Tokens *listaDeTokensPre
 		}
 
 	}
-
-
 	free (linhaLida);
 	fclose (saida);
 	rewind (fp);
@@ -446,8 +444,6 @@ short int procuraEQU (DiretivaEQU *lista, char *string)
 	return -1;
 }
 
-
-//*/
 
 int tipoToken (char * string)
 {
@@ -643,27 +639,21 @@ Tokens* insereToken (Tokens * lista, char * string)
 	{
 		novo->string = (char *)malloc((strlen (string)+1) * sizeof (char));
 		strcpy (novo->string, string);
-
 	}
 	else
 	{
-
 		novo->string = NULL;
 	}
-
 	Token *temp;
 	Tokens *aux = lista;
 	while (aux->proximaLinha != NULL)
 	{
-
 		aux = aux->proximaLinha;
 	}
-
 	aux->qtdToken++;
 	temp = aux->token;
 	if (temp != NULL)
 	{
-
 		while (temp->prox != NULL)
 		{
 			temp = temp->prox;
@@ -674,10 +664,8 @@ Tokens* insereToken (Tokens * lista, char * string)
 	}
 	else
 	{
-
 		novo->prox = aux->token;
 		aux->token = novo;
 	}
-
 	return lista;
 }
