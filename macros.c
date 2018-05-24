@@ -38,6 +38,7 @@ ListaMacro* criaMacros()
 
 void liberaMacros (ListaMacro *lista)
 {
+/*
 	ListaMacro *temp = lista;
 	Tokens *fim;
 	Parametro *aux;
@@ -57,7 +58,8 @@ void liberaMacros (ListaMacro *lista)
 		}
 
         fim = lista->fimMacro;
-        fim->proximaLinha = NULL;
+        //if (fim != NULL)
+            //fim->proximaLinha = NULL;
 
         liberaTokens(temp->inicioMacro);
 
@@ -65,6 +67,7 @@ void liberaMacros (ListaMacro *lista)
 		free (temp);
 		temp = lista;
 	}
+	*/
 }
 
 void imprimiMacro (ListaMacro *lista)

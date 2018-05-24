@@ -2,9 +2,13 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+//#include <stdbool.h>
 
 #include "macros.h"
 #include "preprocessamento.h"
+
+#define true 1
+#define false 0
 
 #define ADD 4
 #define CONST 5
@@ -31,6 +35,8 @@
 #define TEXT 26
 #define ROTULO 27
 #define NUMERO 28
+
+//#define try bool __HadError=false;
 
 /*
 Tabela de erros:
@@ -71,16 +77,19 @@ typedef struct tabelaDeSimbolo {
 
 
 TS* insereNaTS (TS *ts, Token *atoken, short int endereco, short int linha);
+Tokens* algoritmoDeDuasPassagem (Tokens *listaDeTokens, FILE *arqOUT);
 Tokens* algoritmoDeUmaPassagem (Tokens *listaDeTokens, FILE *arqOUT);
 Passagem * colocaEndereco (TS *lista, Token *atoken, Passagem *bla);
 void gravaObjeto (Tokens *listaDeTokens, FILE *arqOUTobjeto);
 Passagem *inserePassagem (Passagem *lista, Token *atoken);
 char* corrigeConst (char *dest, char *in, int linha);
-void completaPassagem (Passagem *pass, TS *ts);
+void completaPassagem (Passagem *pass, TS *ts, Tokens *listaDeTokens);
+Token* substituiTs (TS *lista, Token *atoken);
 void liberaPassagem (Passagem *lista);
+void reverse(char s[]);
 void printTS (TS *ts, Passagem *alt);
 void liberaToken (Token *atoken);
-char* itoa(int val, int base);
+char* itoa(int val, char *str, int base);
 void liberaTS (TS *lista);
 
 
@@ -165,7 +174,7 @@ int main(int argc, char** argv)
 
             //Macros
             strcpy (nomeArquivo, argv[3]);
-            strcat (nomeArquivo, ".macro");
+            strcat (nomeArquivo, ".mcr");
             arqOUTmacro = fopen (nomeArquivo, "w");
             if (arqOUTmacro == NULL)
             {
@@ -187,7 +196,8 @@ int main(int argc, char** argv)
             }
             printf ("\nantesAlgoritmo-----------------------------------\n");
             printTokens(listaDeTokens);
-            listaDeTokens = algoritmoDeUmaPassagem (listaDeTokens, arqOUTobjeto);
+            //istaDeTokens = algoritmoDeDuasPassagem(listaDeTokens, arqOUTobjeto);
+            listaDeTokens = algoritmoDeUmaPassagem(listaDeTokens, arqOUTobjeto);
             printf ("\napos Algoritmo-----------------------------------\n");
             printTokens(listaDeTokens);
             printf ("ta na hora do pau\n");
@@ -203,9 +213,9 @@ int main(int argc, char** argv)
             return 3;
 	}
 
-	free (nomeArquivo);
+	//free (nomeArquivo);
 
-	liberaTokens(listaDeTokens);
+	//liberaTokens(listaDeTokens);
     return 0;
 }
 void printTS (TS *ts, Passagem *alt)
@@ -289,7 +299,7 @@ Passagem * colocaEndereco (TS *lista, Token *atoken, Passagem *bla){
         short int res = strcmp (atoken->string, temp->string);
         if (res == 0)
         {
-            strcpy (atoken->string, itoa (temp->endereco, 10));
+            atoken->string = itoa (temp->endereco, atoken->string, 10);
             return bla;
         }
         temp = temp->prox;
@@ -297,6 +307,17 @@ Passagem * colocaEndereco (TS *lista, Token *atoken, Passagem *bla){
     bla = inserePassagem(bla, atoken);
     return bla;
 }
+void reverse(char s[])
+ {
+     int i, j;
+     char c;
+
+     for (i = 0, j = strlen(s)-1; i<j; i++, j--) {
+         c = s[i];
+         s[i] = s[j];
+         s[j] = c;
+     }
+ }
 
 Passagem *inserePassagem (Passagem *lista, Token *atoken){
     Passagem *aux = lista;
@@ -357,10 +378,11 @@ void liberaPassagem (Passagem *lista){
 }
 
 void liberaToken (Token *atoken){
-    Token *temp = atoken;
+    /*
+    Token *temp = atoken, *next;
     while (temp != NULL){
-        if (atoken != NULL)
-            atoken = atoken->prox;
+        if (next->prox != NULL)
+            next = next->prox;
         if (temp != NULL){
             if (temp->string != NULL){
                 free (temp->string);
@@ -369,25 +391,60 @@ void liberaToken (Token *atoken){
         }
         temp = atoken;
     }
+    */
 }
 
-char* itoa(int val, int base){
+char* itoa(int num, char* str, int base)
+{
+    int i = 0;
+    short int isNegative = false;
 
-	static char buf[32] = {0};
+    /* Handle 0 explicitely, otherwise empty string is printed for 0 */
+    if (num == 0)
+    {
+        str[i++] = '0';
+        str[i] = '\0';
+        return str;
+    }
 
-	int i = 30;
+    // In standard itoa(), negative numbers are handled only with
+    // base 10. Otherwise numbers are considered unsigned.
+    if (num < 0 && base == 10)
+    {
+        isNegative = true;
+        num = -num;
+    }
 
-	for(; val && i ; --i, val /= base)
+    // Process individual digits
+    while (num != 0)
+    {
+        int rem = num % base;
+        str[i++] = (rem > 9)? (rem-10) + 'a' : rem + '0';
+        num = num/base;
+    }
 
-		buf[i] = "0123456789abcdef"[val % base];
+    // If number is negative, append '-'
+    if (isNegative)
+        str[i++] = '-';
 
-	return &buf[i+1];
+    str[i] = '\0'; // Append string terminator
 
+    // Reverse the string
+    reverse(str);
+
+    return str;
 }
 
 
 char* corrigeConst (char *dest, char *in, int linha){
-        if (strlen (in)<2){
+    //printf ("%s\n", in);
+    if (isNumber(in)){
+        char *end;
+        int tempNum = (int) strtol (in, &end, 10);
+        dest = itoa (tempNum, dest, 10);
+        return dest;
+    }
+    if (strlen (in)<2){
         printf ("Erro sintatico, uso invalido de operando em CONST - Linha: %d\n", linha);
         strcpy (dest, "00");
         return dest;
@@ -408,13 +465,14 @@ char* corrigeConst (char *dest, char *in, int linha){
         }
         char *end;
         int tempNum = (int) strtol (in, &end, 16);
-        dest = itoa (tempNum, 10);
+        dest = itoa (tempNum, dest, 10);
     }
+    //printf("dest: %s\n", dest);
     return dest;
 }
 
 
-void completaPassagem (Passagem *pass, TS *ts)
+void completaPassagem (Passagem *pass, TS *ts, Tokens *listaDeTokens)
 {
     Passagem *temp = pass;
     TS *aux;
@@ -422,19 +480,14 @@ void completaPassagem (Passagem *pass, TS *ts)
     Ligerinho *lig;
     while (temp != NULL){
         lig = temp->elementos;
-        if (lig->apontador != NULL)
-            if (lig->apontador->string != NULL)
-                printf ("lig:%s\n", lig->apontador->string);
         aux = ts;
         while (aux != NULL){
             short int res = strcmp (lig->apontador->string, aux->string);
             if (res == 0){
-                printf("Encontrou\n");
                 while (lig!=NULL){
-                    strcpy (lig->apontador->string, itoa (aux->endereco, 10));
+                    lig->apontador->string = itoa (aux->endereco, lig->apontador->string, 10);
                     lig = lig->prox;
                 }
-                printTS(ts, pass);
                 break;
             }
             aux = aux->prox;
@@ -450,23 +503,18 @@ Tokens* algoritmoDeUmaPassagem (Tokens *listaDeTokens, FILE *arqOUT){
     Token *atoken, *prevToken;
     TS *ts = NULL;
     Passagem *nomeQueEsqueci = NULL;
+
     while (lista != NULL)
     {
         if (lista->token == NULL)
             break;
-        printf ("Iniciio Tipo: %d: %d\n", lista->token->tipo, lista->linhaOriginal);
-        //printTokens(listaDeTokens);
-
-        //getchar();
         atoken = lista->token;
         prevToken = atoken;
         while (atoken != NULL)
         {
-            printf("1\n");
            switch (atoken->tipo)
            {
                case SPACE:
-            printf("2\n");
                     endereco++;
                     prevToken->prox = NULL;
                     printf ("antes: %s: %d\n", prevToken->string, lista->linhaOriginal);
@@ -476,23 +524,23 @@ Tokens* algoritmoDeUmaPassagem (Tokens *listaDeTokens, FILE *arqOUT){
                     //prevToken = lista->token;
                     printf ("Tipo: %d: %d\n", lista->token->tipo, lista->linhaOriginal);
                     atoken = NULL;
-            printf("22\n");
                     break;;
 
                case CONST:
-            printf("3\n");
                     endereco++;
                     if (atoken->prox != NULL)
                     {
                         if (atoken->prox->tipo != NUMERO && atoken->prox->tipo != ROTULO)
                         {
-                            printf ("Erro sintatico, uso invalido de operando em CONST - Linha: %d", lista->linhaOriginal);
+                            printf ("qErro sintatico, uso invalido de operando em CONST - Linha: %d", lista->linhaOriginal);
                             liberaToken(atoken);
                             strcpy (prevToken->string, "00");
                             lista->token = NULL;
                         }
                         else
                             prevToken->string = corrigeConst (prevToken->string, atoken->prox->string, lista->linhaOriginal);
+                        printf ("a: %s\n", prevToken->string);
+                        getchar();
                     }
                     else
                     {
@@ -501,21 +549,15 @@ Tokens* algoritmoDeUmaPassagem (Tokens *listaDeTokens, FILE *arqOUT){
                         lista->token = NULL;
                         printf ("Erro sintatico, uso invalido de CONST - Linha: %d", lista->linhaOriginal);
                     }
-            printf("31\n");
                     prevToken->prox = NULL;
-            printf("32\n");
                     liberaToken(atoken);
-            printf("33\n");
                     lista->token = prevToken;
-            printf("34\n");
                     //lista = lista->proximaLinha;
                     liberaToken(atoken);
-            printf("35\n");
                     break;
 
 
                case ROTULO:
-            printf("4\n");
                    if (atoken != lista->token)
                    {
                         endereco++;
@@ -535,24 +577,21 @@ Tokens* algoritmoDeUmaPassagem (Tokens *listaDeTokens, FILE *arqOUT){
                             }
                         }
                    }
-            printf("44\n");
                    break;
                default:
-            printf("5\n");
                    endereco++;
                    break;
 
            }
 
-            printf("6\n");
            if (atoken != NULL){
                prevToken = atoken;
                atoken = atoken->prox;
            }
 
-            printf("7\n");
         }
         lista = lista->proximaLinha;
+        /*
         printf("8\n");
         if (lista != NULL)
         {
@@ -580,13 +619,14 @@ Tokens* algoritmoDeUmaPassagem (Tokens *listaDeTokens, FILE *arqOUT){
             break;
          }
          printf ("9---\n");
+         */
     }
     //printf ("a");
 
    printf ("null\n");
    printf ("nullPulo\n");
    printTS(ts, nomeQueEsqueci);
-   completaPassagem (nomeQueEsqueci, ts);
+   completaPassagem (nomeQueEsqueci, ts, listaDeTokens);
    printf ("aaaaaaaaaaaaaaqui!-------------\n");
    gravaObjeto(listaDeTokens,arqOUT);
    printTokens(listaDeTokens);
@@ -594,6 +634,194 @@ Tokens* algoritmoDeUmaPassagem (Tokens *listaDeTokens, FILE *arqOUT){
    printTS(ts, nomeQueEsqueci);
    printf ("1111111111111111111111!-------------\n");
    liberaPassagem(nomeQueEsqueci);
+   return listaDeTokens;
+}
+
+
+Token * substituiTs (TS *lista, Token *atoken){
+    TS *temp = lista;
+    while (temp != NULL)
+    {
+        short int res = strcmp (atoken->string, temp->string);
+        if (res == 0)
+        {
+            atoken->string = itoa (temp->endereco, atoken->string, 10);
+            return atoken;
+        }
+        temp = temp->prox;
+    }
+    return atoken;
+}
+
+Tokens* algoritmoDeDuasPassagem (Tokens *listaDeTokens, FILE *arqOUT){
+    printTokens(listaDeTokens);
+
+    char tabelaTokens [27][3] =
+	{
+		" ,", /*0*/
+		" , ", /*1*/
+		",", /*2*/
+		", ", /*3*/
+		"1", /*4*/
+		"CON", /*5*/
+		"9", /*6*/
+		"DAT", /*7*/
+		"4", /*8*/
+		"END", /*9*/
+		"EQU", /*10*/
+		"IF", /*11*/
+		"12", /*12*/
+		"5", /*13*/
+		"6", /*14*/
+		"7", /*15*/
+		"8", /*16*/
+		"10", /*17*/
+		"MAC", /*18*/
+		"3", /*19*/
+		"13", /*20*/
+		"SEC", /*21*/
+		"SPA", /*22*/
+		"14", /*23*/
+		"11", /*24*/
+		"2", /*25*/
+		"TEX", /*26*/
+	};
+
+    short int endereco = 0;
+    Tokens *lista = listaDeTokens;
+    Token *atoken;//, *prevToken;
+    Passagem *nomeQueEsqueci = NULL;
+    TS *ts = NULL;
+    int i;
+    for (i = 0; i<=1; i++){
+        lista = listaDeTokens;
+        while (lista != NULL)
+        {
+            if (lista->token == NULL)
+                break;
+            printf ("Iniciio Tipo: %d: %d\n", lista->token->tipo, lista->linhaOriginal);
+            atoken = lista->token;
+            //prevToken = atoken;
+            while (atoken != NULL)
+            {
+               if (atoken->tipo == ROTULO)
+               {
+                   if (atoken != lista->token)
+                   {
+                        endereco++;
+                        char tempChar[21];
+                        strcpy (tempChar, atoken->string);
+                        if (ts != NULL)
+                            atoken = substituiTs (ts, atoken);
+                        if (i == 1 && strcmp (tempChar, atoken->string) == 0){
+                            printf ("Erro sintatico: Rotulo não declarado - Linha: %d", lista->linhaOriginal);
+                        }
+                        if (strcmp (tempChar, atoken->string) != 0){
+                            if (atoken->prox != NULL)
+                            {
+                                Token *tempToken = atoken->prox;
+                                if (tempToken->tipo == SPACE){
+                                    atoken->tipo = SPACE;
+                                    atoken->prox = tempToken->prox;
+                                    free (tempToken);
+                                }
+                                else if (tempToken->tipo == CONST){
+                                    atoken->tipo = CONST;
+                                    atoken->prox = tempToken->prox;
+                                    free (tempToken);
+                                }
+                            }
+                        }
+                   }
+                   else if (atoken == lista->token)
+                   {
+                        ts = insereNaTS (ts, atoken, endereco, lista->linhaOriginal);
+                        if (atoken->prox != NULL)
+                        {
+                            if (atoken->prox->tipo != SPACE && atoken->prox->tipo != CONST) //label
+                            {
+                                atoken = lista->token;
+                                lista->token = lista->token->prox;
+                                atoken->prox = NULL;
+                                liberaToken(atoken);
+                                atoken = lista->token;
+                            }
+                        }
+                    }
+                    printf("44\n");
+                }
+                else
+                {
+                      endereco++;
+                }
+
+                printf("6\n");
+               if (atoken != NULL){
+                   //prevToken = atoken;
+                   atoken = atoken->prox;
+               }
+
+                printf("7\n");
+            }
+            printf("8\n");
+            if (i == 1){
+                atoken = lista->token;
+                while (atoken != NULL){
+                    if (atoken->tipo == SPACE || atoken->tipo == CONST){
+                        if (atoken->string == NULL)
+                        {
+                            if (atoken->prox != NULL){
+                                atoken = atoken->prox;
+                            }
+                            else{
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            //try{
+                                fputs (atoken->string, arqOUT);
+                                fputc (' ', arqOUT);
+                            //}
+                        }
+                    }
+                    else if (atoken->tipo == ROTULO)
+                    {
+                        if (atoken->string != NULL)
+                            //try{
+                                fputs (atoken->string, arqOUT);
+                                fputc (' ', arqOUT);
+                            //}
+                    }
+                    else
+                    {
+                        //try{
+                            fputs (tabelaTokens [atoken->tipo], arqOUT);
+                            fputc (' ', arqOUT);
+                        //}
+                    }
+                    atoken = atoken->prox;
+                }
+
+            }
+            lista = lista->proximaLinha;
+        }
+    //printf ("a");
+    }
+   printf ("null\n");
+   printf ("nullPulo\n");
+
+    if (arqOUT != NULL)
+        fclose (arqOUT);
+   printTS(ts, nomeQueEsqueci);
+   //completaPassagem (nomeQueEsqueci, ts);
+   printf ("aaaaaaaaaaaaaaqui!-------------\n");
+   //gravaObjeto(listaDeTokens,arqOUT);
+   printTokens(listaDeTokens);
+   printf ("qqqqqqqqqqqqqqqaqui!-------------\n");
+   //printTS(ts, nomeQueEsqueci);
+   //printf ("1111111111111111111111!-------------\n");
+   //liberaPassagem(nomeQueEsqueci);
    return listaDeTokens;
 }
 
@@ -634,32 +862,20 @@ void gravaObjeto (Tokens *listaDeTokens, FILE *arqOUTobjeto){
 		"2", /*25*/
 		"TEXT", /*26*/
 	};
-printf ("2\n");
     while (lista != NULL)
-    {printf ("3\n");
+    {
         atoken = lista->token;
         while (atoken != NULL)
         {
-            printf ("4\n");
             if (atoken->tipo == ROTULO){
-            printf ("41\n");
                 fputs(atoken->string, arqOUTobjeto);
-            printf ("42\n");
             }
             else{
-            printf ("51:%s\n",tabelaTokens [atoken->tipo]);
                 fputs(tabelaTokens [atoken->tipo], arqOUTobjeto);
-            printf ("51\n");
                 }
-            printf ("53\n");
             fputc(' ', arqOUTobjeto);
-            printf ("6\n");
             atoken = atoken->prox;
-            printf ("7\n");
         }
-        printf ("8\n");
         lista = lista->proximaLinha;
-        printf ("9\n");
     }
-    printf ("10\n");
 }
