@@ -188,7 +188,7 @@ int main(int argc, char** argv)
 
             //CodigoObjeto
             strcpy (nomeArquivo, argv[3]);
-            strcat (nomeArquivo, ".0");
+            strcat (nomeArquivo, ".o");
             arqOUTobjeto = fopen (nomeArquivo, "w");
             if (arqOUTobjeto == NULL)
             {
