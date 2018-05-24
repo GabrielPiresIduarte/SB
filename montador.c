@@ -134,16 +134,16 @@ int main(int argc, char** argv)
 	switch(toupper (argv [2][1])) //Deixa segundo caracter do segundo argumento maisculo
 	{
         case 'P':
-            printf ("Preprocessamento\n");
             //Preprocessamento
             listaDeTokens = preprocessamento (arqIN, argv[3], listaDeTokens);
             if (arqIN != NULL)
                 fclose (arqIN);
+
+            printf ("Preprocessamento Finalizado\n");
             break;
 
 
         case 'M':
-            printf ("Macros\n");
             //Preprocessamento
             listaDeTokens = preprocessamento (arqIN, argv[3], listaDeTokens);
             if (arqIN != NULL)
@@ -161,11 +161,12 @@ int main(int argc, char** argv)
             listaDeTokens = macros (listaDeTokens, arqOUTmacro);
             if (arqOUTmacro != NULL)
                 fclose (arqOUTmacro);
+
+            printf ("Macros Expandidas\n");
             break;
 
 
         case 'O':
-            printf ("Codigo Objeto\n");
             //Preprocessamento
             //Preprocessamento
             listaDeTokens = preprocessamento (arqIN, argv[3], listaDeTokens);
@@ -194,19 +195,12 @@ int main(int argc, char** argv)
                 printf ("ERRO_16\nErro ao gerar arquivo de saida");
                 return 2;
             }
-            printf ("\nantesAlgoritmo-----------------------------------\n");
-            printTokens(listaDeTokens);
-            //istaDeTokens = algoritmoDeDuasPassagem(listaDeTokens, arqOUTobjeto);
             listaDeTokens = algoritmoDeUmaPassagem(listaDeTokens, arqOUTobjeto);
-            printf ("\napos Algoritmo-----------------------------------\n");
-            printTokens(listaDeTokens);
-            printf ("ta na hora do pau\n");
-            //gravaObjeto (listaDeTokens, arqOUTobjeto);
 
             if (arqOUTobjeto != NULL)
                 fclose (arqOUTobjeto);
 
-            printf ("Acabou o pau\n");
+            printf ("Codigo Objeto Gerado\n");
             break;
         default:
             printf("Erro_3\nComando de argumento invalido");
@@ -497,7 +491,6 @@ void completaPassagem (Passagem *pass, TS *ts, Tokens *listaDeTokens)
 }
 
 Tokens* algoritmoDeUmaPassagem (Tokens *listaDeTokens, FILE *arqOUT){
-    printTokens(listaDeTokens);
     short int endereco = 0;
     Tokens *lista = listaDeTokens;
     Token *atoken, *prevToken;
@@ -517,12 +510,7 @@ Tokens* algoritmoDeUmaPassagem (Tokens *listaDeTokens, FILE *arqOUT){
                case SPACE:
                     endereco++;
                     prevToken->prox = NULL;
-                    printf ("antes: %s: %d\n", prevToken->string, lista->linhaOriginal);
                     strcpy (prevToken->string, "00");
-                    liberaToken (atoken);
-                    //lista = lista->proximaLinha;
-                    //prevToken = lista->token;
-                    printf ("Tipo: %d: %d\n", lista->token->tipo, lista->linhaOriginal);
                     atoken = NULL;
                     break;;
 
@@ -539,8 +527,6 @@ Tokens* algoritmoDeUmaPassagem (Tokens *listaDeTokens, FILE *arqOUT){
                         }
                         else
                             prevToken->string = corrigeConst (prevToken->string, atoken->prox->string, lista->linhaOriginal);
-                        printf ("a: %s\n", prevToken->string);
-                        getchar();
                     }
                     else
                     {
@@ -591,48 +577,10 @@ Tokens* algoritmoDeUmaPassagem (Tokens *listaDeTokens, FILE *arqOUT){
 
         }
         lista = lista->proximaLinha;
-        /*
-        printf("8\n");
-        if (lista != NULL)
-        {
-            printf ("---------------------\n");
-            printTS (ts, nomeQueEsqueci);
-            printf ("---------------------: %d\t", lista->linhaOriginal);
-            if (lista->token->tipo==ROTULO)
-                printf ("%s", lista->token->string);
-            printf ("----------\n");
-            //if (lista->linhaOriginal>40){
-            //    getchar();
-           // }
-            printf ("----------\n");
-         }
-         else {
-            printf ("null\n");
-            printf ("nullPulo\n");
-            printTS(ts, nomeQueEsqueci);
-            completaPassagem (nomeQueEsqueci, ts);
-            printf ("adsfasdaqui!-------------\n");
-            //gravaObjeto(listaDeTokens,arqOUT);
-            printTokens(listaDeTokens);
-            printf ("asdfasdfasdfaqui!-------------\n");
-            printTS(ts, nomeQueEsqueci);
-            break;
-         }
-         printf ("9---\n");
-         */
     }
-    //printf ("a");
 
-   printf ("null\n");
-   printf ("nullPulo\n");
-   printTS(ts, nomeQueEsqueci);
    completaPassagem (nomeQueEsqueci, ts, listaDeTokens);
-   printf ("aaaaaaaaaaaaaaqui!-------------\n");
    gravaObjeto(listaDeTokens,arqOUT);
-   printTokens(listaDeTokens);
-   printf ("qqqqqqqqqqqqqqqaqui!-------------\n");
-   printTS(ts, nomeQueEsqueci);
-   printf ("1111111111111111111111!-------------\n");
    liberaPassagem(nomeQueEsqueci);
    return listaDeTokens;
 }
@@ -826,12 +774,8 @@ Tokens* algoritmoDeDuasPassagem (Tokens *listaDeTokens, FILE *arqOUT){
 }
 
 void gravaObjeto (Tokens *listaDeTokens, FILE *arqOUTobjeto){
-    printf ("1\n");
     Tokens *lista = listaDeTokens;
     Token *atoken;
-    if (arqOUTobjeto == NULL){
-        printf("arquivoNLLLLLLLLLLLLO\n\n\n\n");
-    }
     char tabelaTokens [27][13] =
 	{
 		" ,", /*0*/
