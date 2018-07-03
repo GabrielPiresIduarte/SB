@@ -1,11 +1,4 @@
 section .data
-puta db 'puta '
-puta1 db 'puta1'
-puta2 db 'puta2'
-vadia db 'vadia'
-piroca db 'piroca'
-buceta db 'buceta'
-separador db '[>]'
 negativo db '-'
 
 intro db 'POR FAVOR ESCREVA SEU NOME', 10
@@ -16,6 +9,8 @@ TAM EQU $ - comprimento
 msg1 db 'ESCOLHA UMA OPÇÂO:',10, '-1: SOMA',10, '-2: SUBTRAÇÂO', 10, '-3: MULTIPLICAÇÂO', 10, '-4: DIVISÂO', 10, '-5: MOD', 10, '-6: SAIR', 10
 .len:	equ	$ - msg1
 NOMETAM equ 20
+errodivisaozero db 'erro divisao por zero', 10
+tamerro equ 22
 
 
 section .bss
@@ -135,6 +130,8 @@ multiplica:
 divide:
 	mov eax, [arg1]
 	mov ebx, [arg2]
+	cmp ebx, dword 0
+	je errodiv
 	cdq
 	idiv ebx
 	mov [resposta], eax
@@ -143,11 +140,21 @@ divide:
 mod:
 	mov eax, [arg1]
 	mov ebx, [arg2]
+	cmp ebx, dword 0
+	je errodiv
 	cdq
 	idiv ebx
 	mov [resposta], edx
 	jmp imprimeresposta
 
+errodiv:
+	mov eax, 4
+	mov ebx, 1
+	mov ecx, errodivisaozero
+	mov edx, tamerro+1
+	int 80h
+	jmp menu
+	
 
 imprimeresposta:
 	push resposta
